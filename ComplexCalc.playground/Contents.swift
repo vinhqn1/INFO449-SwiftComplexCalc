@@ -1,7 +1,6 @@
 //: # UW Complex Calculator
 //:
 print("Welcome back to the UW Calculator")
-
 //: ## Your tasks
 //: The simple calculator you explored in the previous assignment was a smashing success with Upper Management, and they want more. Specifically, they want a version of it in a nicely self-contained class that they can import everywhere they need calculation capabilities throughout the enterprise. This is a mission-critical project!
 //:
@@ -28,6 +27,93 @@ print("Welcome back to the UW Calculator")
 //: IMPORTANT: If any tests are commented out, you will be graded a zero (0)! You should never be in the habit of eliminating tests to make the code pass.
 //:
 class Calculator {
+//TRADITIONAL METHODS
+//  LHS, RHS
+    func add(lhs: Int, rhs: Int) -> Int {
+        return lhs &+ rhs
+    }
+    
+    func subtract(lhs: Int, rhs: Int) -> Int {
+        return lhs &- rhs
+    }
+    
+    func multiply(lhs: Int, rhs: Int) -> Int {
+        return lhs &* rhs
+    }
+
+    func divide(lhs: Int, rhs: Int) -> Int {
+        return lhs / rhs
+    }
+    
+//  [ARGS]
+    func add(_ args: [Int]) -> Int {
+        var sum = 0
+        for n in args {
+            sum &+= n
+        }
+        return sum
+    }
+    
+    func multiply(_ args: [Int]) -> Int {
+        var prod = 1
+        for n in args {
+            prod &*= n
+        }
+        return prod
+    }
+    
+//CARTESIAN METHODS
+//  TUPLES
+    func add(lhs: (Int, Int), rhs: (Int, Int)) -> (Int, Int) {
+        let (x1, y1) = lhs
+        let (x2, y2) = rhs
+        return (x1 &+ x2, y1 &+ y2)
+    }
+    
+    func subtract(lhs: (Int, Int), rhs: (Int, Int)) -> (Int, Int) {
+        let (x1, y1) = lhs
+        let (x2, y2) = rhs
+        return (x1 &- x2, y1 &- y2)
+    }
+    
+//  DICTS
+    func add(lhs: [String: Int], rhs: [String: Int]) -> [String: Int] {
+        
+        let x = (lhs["x"] ?? 0) &+ (rhs["x"] ?? 0)
+        let y = (lhs["y"] ?? 0) &+ (rhs["y"] ?? 0)
+        return ["x": x, "y": y]
+    }
+    
+    func subtract(lhs: [String: Int], rhs: [String: Int]) -> [String: Int] {
+        let x = (lhs["x"] ?? 0) &- (rhs["x"] ?? 0)
+        let y = (lhs["y"] ?? 0) &- (rhs["y"] ?? 0)
+        return ["x": x, "y": y]
+    }
+    
+//NON TRADITIONAL METHODS
+    func count(_ args: [Int]) -> Int {
+        return args.count
+    }
+    
+    func avg(_ args: [Int]) -> Int {
+        if args.count == 0 {
+            return 0
+        }
+        return self.add(args) / args.count
+    }
+    
+//HIGHER ORDER METHODS
+    func mathOp(lhs: Int, rhs: Int, op: (Int, Int) -> Int) -> Int {
+        return op(lhs, rhs)
+    }
+    
+    func mathOp(args: [Int], beg: Int, op: (Int, Int) -> Int) -> Int {
+        var lhs = op(beg, args[0])
+        for i in 1..<args.count {
+            lhs = op(lhs, args[i])
+        }
+        return lhs
+    }
 }
 
 //: Don't change the name of this object (`calc`); it's used in all the tests.
@@ -44,6 +130,27 @@ let calc = Calculator()
 
 // ===== Your tests go here
 
+calc.add([]) == 0 // empty sums should be 0
+calc.multiply([]) == 1 // empty products should be 1
+calc.avg([]) == 0
+calc.count([]) == 0
+calc.add(lhs: [:], rhs: [:]) == ["x": 0, "y": 0]
+
+/*
+CASE: Two valid inputs are used, but the result can't be represented by an Int (overflow)
+SOLUTION: Wrap around
+JUSTIFICATION: This is not always the solution, but it is simple and a historically valid way to handle overflow. In some cases, this is what a user would want to happen over alternatives
+ ALTERNATIVES: Throw an error. Leave as is.
+ */
+calc.add(lhs: 9223372036854775807, rhs: 2) == -9223372036854775807
+calc.subtract(lhs: -9223372036854775807, rhs: 2) == 9223372036854775807
+calc.multiply(lhs: 9223372036854775807, rhs: 2) == -2
+calc.add([9223372036854775807, 2, 3]) == -9223372036854775804
+calc.multiply([9223372036854775807, 2, 3]) == -6
+calc.add(lhs: (9223372036854775807, 0), rhs: (2, 0)) == (-9223372036854775807, 0)
+calc.subtract(lhs: (-9223372036854775807, 0), rhs: (2, 0)) == (9223372036854775807, 0)
+calc.add(lhs: ["x": 9223372036854775807, "y": 0], rhs: ["x": 2, "y": 0]) == ["x": -9223372036854775807, "y": 0]
+calc.subtract(lhs: ["x": -9223372036854775807, "y": 0], rhs: ["x": 2, "y": 0]) == ["x": 9223372036854775807, "y": 0]
 //: ---
 //: ## Test code block
 //: Do not modify the code in this section
@@ -52,7 +159,7 @@ calc.subtract(lhs: 2, rhs: 2) == 0
 calc.multiply(lhs: 2, rhs: 2) == 4
 calc.divide(lhs: 2, rhs: 2) == 1
 
-calc.mathOp(lhs: 5, rhs: 5, op: { (lhs: Int, rhs: Int) -> Int in (lhs + rjs) + (lhs * rhs) }) == 35
+calc.mathOp(lhs: 5, rhs: 5, op: { (lhs: Int, rhs: Int) -> Int in (lhs + rhs) + (lhs * rhs) }) == 35
     // This style is one way of writing an anonymous function
 calc.mathOp(lhs: 10, rhs: -5, op: { ($0 + $1) + ($0 - $1) }) == 20
     // This is the second, more terse, style; either works
